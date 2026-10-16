@@ -109,57 +109,6 @@
                 white-space: nowrap;
             }
 
-            .friend-scoreboard {
-                position: fixed;
-                top: 50%;
-                left: clamp(12px, 4vw, 32px);
-                transform: translateY(-50%);
-
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-
-                min-width: 150px;
-                padding: 14px 16px;
-                border-radius: 8px;
-                background-color: rgba(255, 230, 240, 0.78);
-
-                font-family: "Poppins", sans-serif;
-                user-select: none;
-                z-index: 900;
-            }
-
-            .friend-scoreboard-title {
-                margin: 0 0 2px;
-                font-size: 13px;
-                font-weight: 700;
-                line-height: 1;
-                color: #2b2b2b;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-
-            .friend-score-row {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                align-items: center;
-                gap: 18px;
-            }
-
-            .friend-score-name {
-                font-size: 16px;
-                font-weight: 700;
-                color: #2b2b2b;
-            }
-
-            .friend-score-value {
-                font-family: "Sora", sans-serif;
-                font-size: 22px;
-                font-weight: 800;
-                font-variant-numeric: tabular-nums;
-                color: #ff4d6d;
-            }
-
             .pig-wrapper{
                 position: relative;
                 display: flex;
@@ -215,19 +164,15 @@
             .hidden {
                 display: none;
             }
-
-             #undoBtn,
-            #resetBtn,
-            #saveNameBtn {
+            #undoBtn,
+            #resetBtn {
                 font-size: 13px;
                 color: white;
                 border-radius: 8px;
                 opacity: 0.9;
             }
-
-             #undoBtn:hover,
-            #resetBtn:hover,
-            #saveNameBtn:hover {
+            #undoBtn:hover,
+            #resetBtn:hover {
                 opacity: 1;
             }
 
@@ -258,42 +203,6 @@
                 background-color: #607d8b;
             }
 
-            .name-panel {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-
-                max-width: min(420px, calc(100vw - 24px));
-                font-family: "Poppins", sans-serif;
-            }
-
-            .name-panel.hidden {
-                display: none;
-            }
-
-            .name-panel input {
-                min-height: 32px;
-                padding: 6px 8px;
-                border: 1px solid rgba(255, 77, 109, 0.28);
-                border-radius: 8px;
-                background-color: rgba(255, 255, 255, 0.62);
-                color: #2b2b2b;
-                font-family: "Poppins", sans-serif;
-                font-size: 13px;
-                box-sizing: border-box;
-            }
-
-            .firebase-status {
-                flex-basis: 100%;
-                margin: 0;
-                color: #2b2b2b;
-                font-size: 12px;
-                line-height: 1.25;
-                text-align: center;
-            }
-
             @media (max-height: 620px) {
                 :root {
                     --pig-size: min(380px, 76vw, calc(100svh - 245px));
@@ -311,47 +220,12 @@
                 .app {
                     margin-top: 95px;
                 }
-
-                .friend-scoreboard {
-                    top: 86px;
-                }
             }
 
             @media (max-width: 900px) {
-                .friend-scoreboard {
-                    position: fixed;
-                    left: 10px;
-                    top: 132px;
-                    transform: none;
-                    width: auto;
-                    min-width: 0;
-                    box-sizing: border-box;
-                    gap: 3px;
-                    padding: 0;
-                    background-color: transparent;
-                }
-
-                .friend-scoreboard-title {
-                    display: none;
-                }
-
-                .friend-score-row {
-                    gap: 8px;
-                }
-
-                .friend-score-name {
-                    font-size: 12px;
-                }
-
-                .friend-score-value {
-                    font-size: 14px;
-                }
             }
 
             @media (max-width: 380px) {
-                .friend-scoreboard {
-                    top: 116px;
-                }
 
                 .scoreboard {
                     gap: 2px 6px;
@@ -373,10 +247,6 @@
         <div class="header">
             <h1 class="title">Apology Piggy Bank</h1>
         </div>
-        <aside class="friend-scoreboard" aria-label="Friends scoreboard">
-            <h2 class="friend-scoreboard-title">Scoreboard</h2>
-            <div id="friendScores"></div>
-        </aside>
         <div class="app">
             <div class="scoreboard" aria-label="Score board">
                 <span class="score-label">Score</span>
@@ -394,134 +264,68 @@
                 <button id="undoBtn">Undo</button>
                 <button id="resetBtn">&#8634;</button>
             </div>
-            <div class="name-panel" id="namePanel">
-                <input id="playerName" maxlength="24" aria-label="Your scoreboard name" placeholder="Your name">
-                <button id="saveNameBtn" type="button">Save name</button>
-                <p class="firebase-status" id="firebaseStatus"></p>
-            </div>
         </div>   
 
-        <script type="module">
-           import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-           import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-           import { collection, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        <script>
+            const moneyDisplay = document.getElementById("money");
+            const undoBtn = document.getElementById("undoBtn");
+            const resetBtn = document.getElementById("resetBtn");
+            const pigContainer = document.querySelector(".pig-container");
+            const piggy = document.getElementById("piggy");
+            const sound = document.getElementById("coinSound");
+            const maxMoney = 25;
+            let money = Number(localStorage.getItem("money")) || 0;
+            let history = JSON.parse(localStorage.getItem("history") || "null") || [money];
 
-           const firebaseConfig = {
-            apiKey: "AIzaSyBng6n-pUWMGsbyTcrVFtIBAXLi_acpPM0",
-            authDomain: "piggy-bank-d64b3.firebaseapp.com",
-            projectId: "piggy-bank-d64b3",
-            storageBucket: "piggy-bank-d64b3.firebasestorage.app",
-            messagingSenderId: "872269180934",
-            appId: "1:872269180934:web:eb3931fb866c21f2d41387"
-           };
-           const moneyDisplay = document.getElementById("money");
-           const friendScores = document.getElementById("friendScores");
-           const undoBtn = document.getElementById("undoBtn");
-           const resetBtn = document.getElementById("resetBtn");
-           const playerName = document.getElementById("playerName");
-           const saveNameBtn = document.getElementById("saveNameBtn");
-           const firebaseStatus = document.getElementById("firebaseStatus");
-           const pigContainer = document.querySelector(".pig-container");
-           const piggy = document.getElementById("piggy");
-           const sound = document.getElementById("coinSound");
-           const maxMoney = 25;
-           let db, user, activePlayer = "", scores = {}, money = 0, history = [0], firebaseReady = false;
+            pigContainer.addEventListener("click", addMoney);
+            undoBtn.addEventListener("click", undo);
+            resetBtn.addEventListener("click", resetAll);
+            renderState();
 
-           renderState();
-           pigContainer.addEventListener("click", addMoney);
-           undoBtn.addEventListener("click", undo);
-           resetBtn.addEventListener("click", resetAll);
-           saveNameBtn.addEventListener("click", saveName);
-           startFirebase();
-
-           async function startFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                db = getFirestore(app);
-                user = (await signInAnonymously(auth)).user;
-                activePlayer = user.uid;
-                const playerRef = doc(db, "games", "piggyBank", "players", activePlayer);
-                await setDoc(playerRef, { name: "Bob", score: 0, updatedAt: serverTimestamp() }, { merge: true });
-                firebaseReady = true;
-                playerName.value = "Bob";
-                setStatus("Choose a name and start playing.");
-                onSnapshot(collection(db, "games", "piggyBank", "players"), (snapshot) => {
-                    scores = {};
-                    snapshot.forEach((item) => scores[item.id] = item.data());
-                    renderState();
-                }, (error) => setStatus(`Scoreboard error: ${error.message}`));
-            } catch(error) {
-                setStatus(`Could not connect to the shared scoreboard: ${error.message}`);
-            }
-           }
-
-           async function saveName() {
-            if(!firebaseReady) return setStatus("Connecting to the shared scoreboard?");
-            const name = playerName.value.trim().slice(0, 24) || "Bob";
-            try {
-                await updateDoc(doc(db, "games", "piggyBank", "players", activePlayer), { name, updatedAt: serverTimestamp() });
-                playerName.value = name;
-                setStatus(`Your scoreboard name is ${name}.`);
-            } catch(error) { setStatus(`Could not save name: ${error.message}`); }
-           }
-
-           async function addMoney() {
-            if(!firebaseReady) return;
-            money = (Number(scores[activePlayer]?.score) || 0) + 1;
-            try {
-                await updateDoc(doc(db, "games", "piggyBank", "players", activePlayer), { score: money, updatedAt: serverTimestamp() });
+            function addMoney() {
+                money += 1;
                 history.push(money);
+                saveState();
                 renderState();
                 pigContainer.style.transform = "scale(1.08)";
                 setTimeout(() => pigContainer.style.transform = "scale(1)", 150);
                 piggy.src = "piggy-no-coin.png";
                 setTimeout(() => piggy.src = "piggy.png", 250);
                 playSound();
-            } catch(error) { setStatus(`Could not update score: ${error.message}`); }
-           }
+            }
 
-           async function undo() {
-            if(history.length <= 1 || !firebaseReady) return;
-            history.pop(); money = history[history.length - 1];
-            await updateDoc(doc(db, "games", "piggyBank", "players", activePlayer), { score: money, updatedAt: serverTimestamp() });
-            renderState();
-           }
+            function undo() {
+                if(history.length <= 1) return;
+                history.pop();
+                money = history[history.length - 1];
+                saveState();
+                renderState();
+            }
 
-           async function resetAll() {
-            if(!firebaseReady) return;
-            money = 0; history = [0];
-            await updateDoc(doc(db, "games", "piggyBank", "players", activePlayer), { score: 0, updatedAt: serverTimestamp() });
-            renderState();
-           }
+            function resetAll() {
+                money = 0;
+                history = [0];
+                saveState();
+                renderState();
+            }
 
-           function playSound() {
-            sound.pause(); sound.currentTime = 0;
-            sound.volume = Math.min((Number(scores[activePlayer]?.score) || 0) / maxMoney, 1);
-            const promise = sound.play();
-            if(promise !== undefined) promise.catch(() => {});
-           }
+            function saveState() {
+                localStorage.setItem("money", String(money));
+                localStorage.setItem("history", JSON.stringify(history));
+            }
 
-           function renderState() {
-            money = Number(scores[activePlayer]?.score) || 0;
-            moneyDisplay.innerText = Math.round(money).toString();
-            const rows = Object.entries(scores).sort(([idA, a], [idB, b]) => {
-                if(idA === activePlayer) return -1;
-                if(idB === activePlayer) return 1;
-                return String(a.name || "").localeCompare(String(b.name || ""));
-            });
-            friendScores.replaceChildren(...rows.map(([id, data]) => {
-                const row = document.createElement("div"); row.className = "friend-score-row";
-                const name = document.createElement("span"); name.className = "friend-score-name";
-                name.textContent = `${data.name || "Bob"}${id === activePlayer ? " (you)" : ""}`;
-                const value = document.createElement("span"); value.className = "friend-score-value";
-                value.textContent = String(Math.round(Number(data.score) || 0));
-                row.append(name, value); return row;
-            }));
-            undoBtn.disabled = history.length <= 1;
-           }
+            function renderState() {
+                moneyDisplay.innerText = String(Math.round(money));
+                undoBtn.disabled = history.length <= 1;
+            }
 
-           function setStatus(message) { firebaseStatus.innerText = message; }
+            function playSound() {
+                sound.pause();
+                sound.currentTime = 0;
+                sound.volume = Math.min(money / maxMoney, 1);
+                const promise = sound.play();
+                if(promise !== undefined) promise.catch(() => {});
+            }
         </script>
     </body>
 </html>
